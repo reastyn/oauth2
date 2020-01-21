@@ -5,8 +5,9 @@ namespace SizeID\OAuth2;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Message\RequestInterface;
-use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use SizeID\OAuth2\Entities\AccessToken;
 use SizeID\OAuth2\Exceptions\InvalidStateException;
 use SizeID\OAuth2\Repositories\AccessTokenRepositoryInterface;
@@ -177,8 +178,8 @@ abstract class Api
 	private function buildRequest(RequestInterface $request)
 	{
 		$request = clone $request;
-		$request->addHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken());
-		$request->setUrl($this->apiBaseUrl . '/' . $request->getUrl());
+		$request->withAddedHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken());
+		$request->withUri(new Uri($this->apiBaseUrl . '/' . $request->getUri()));
 		return $request;
 	}
 }
