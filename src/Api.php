@@ -155,7 +155,7 @@ abstract class Api
 	private function createResponse(RequestInterface $request)
 	{
 		$response = $this->callApi($this->buildRequest($request));
-		if ($response->getStatusCode() === 401 && $response->getHeader(self::SIZEID_ERROR_CODE_HEADER) == 109) {
+		if ($response->getStatusCode() === 401 && $response->getHeaderLine(self::SIZEID_ERROR_CODE_HEADER) == 109) {
 			$this->refreshAccessToken();
 			return $this->callApi($this->buildRequest($request));
 		}

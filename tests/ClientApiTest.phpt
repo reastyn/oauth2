@@ -80,7 +80,7 @@ class ClientApiTest extends TestCase
 		$httpClient
 			->shouldReceive('send')
 			->andReturn($response);
-		$stream = m::mock('GuzzleHttp\Stream\StreamInterface');
+		$stream = m::mock(StreamInterface::class);
 		$stream
 			->shouldReceive('getContents')
 			->andReturn('{"access_token":"token", "expires_in": 60}');
