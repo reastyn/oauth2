@@ -177,9 +177,7 @@ abstract class Api
 	 */
 	private function buildRequest(RequestInterface $request)
 	{
-		$request = clone $request;
-		$request->withAddedHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken());
-		$request->withUri(new Uri($this->apiBaseUrl . '/' . $request->getUri()));
-		return $request;
+		return $request->withAddedHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken())
+			->withUri(new Uri($this->apiBaseUrl . '/' . $request->getUri()));
 	}
 }
