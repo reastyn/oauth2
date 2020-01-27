@@ -88,12 +88,6 @@ abstract class Api
 	 */
 	public function send(RequestInterface $request)
 	{
-		$hasToken = $this->hasAccessToken();
-		if (!is_bool($hasToken)) {
-			throw new InvalidStateException(
-				"Method 'AccessTokenRepositoryInterface:hasAccessToken' should return boolean."
-			);
-		}
 		if (!$this->hasAccessToken()) {
 			$this->acquireNewAccessToken();
 		}
@@ -113,7 +107,7 @@ abstract class Api
 	/**
 	 * @return bool
 	 */
-	protected function hasAccessToken()
+	protected function hasAccessToken(): bool
 	{
 		return $this->accessTokenRepository->hasAccessToken();
 	}
@@ -154,12 +148,16 @@ abstract class Api
 	 */
 	private function createResponse(RequestInterface $request)
 	{
-		$response = $this->callApi($this->buildRequest($request));
-		if ($response->getStatusCode() === 401 && $response->getHeaderLine(self::SIZEID_ERROR_CODE_HEADER) == 109) {
-			$this->refreshAccessToken();
-			return $this->callApi($this->buildRequest($request));
+		try {
+			$response = $this->callApi($this->buildRequest($request));
+		} catch (ClientException $exception) {
+			$response = $exception->getResponse();
+			if ($response->getStatusCode() === 401 && $response->getHeaderLine(self::SIZEID_ERROR_CODE_HEADER) == 109) {
+				$this->refreshAccessToken();
+				return $this->callApi($this->buildRequest($request));
+			}
+			return $response;
 		}
-		return $response;
 	}
 
 	/**
@@ -177,7 +175,8 @@ abstract class Api
 	 */
 	private function buildRequest(RequestInterface $request)
 	{
-		return $request->withAddedHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken())
+		return $request
+			->withAddedHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken())
 			->withUri(new Uri($this->apiBaseUrl . '/' . $request->getUri()));
 	}
 }
