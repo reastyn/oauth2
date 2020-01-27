@@ -156,8 +156,8 @@ abstract class Api
 				$this->refreshAccessToken();
 				return $this->callApi($this->buildRequest($request));
 			}
-			return $response;
 		}
+		return $response;
 	}
 
 	/**
