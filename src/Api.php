@@ -60,19 +60,22 @@ abstract class Api
 		$authorizationServerUrl,
 		$apiBaseUrl,
 		$httpClient
-	)
-	{
+	) {
 		$this->clientId = $clientId;
 		$this->clientSecret = $clientSecret;
 		$this->accessTokenRepository = $accessTokenRepository;
-		if ($authorizationServerUrl === NULL) {
+		if ($authorizationServerUrl === null) {
 			$authorizationServerUrl = Config::AUTHORIZATION_SERVER_URL;
 		}
-		if ($apiBaseUrl === NULL) {
+		if ($apiBaseUrl === null) {
 			$apiBaseUrl = Config::API_URL;
 		}
-		if ($httpClient === NULL) {
-			$httpClient = new Client();
+		if ($httpClient === null) {
+			$httpClient = new Client(
+				[
+					RequestOptions::HTTP_ERRORS => false,
+				]
+			);
 		}
 		$this->authorizationServerUrl = $authorizationServerUrl;
 		$this->apiBaseUrl = $apiBaseUrl;
@@ -88,6 +91,12 @@ abstract class Api
 	 */
 	public function send(RequestInterface $request)
 	{
+		$hasToken = $this->hasAccessToken();
+		if (!is_bool($hasToken)) {
+			throw new InvalidStateException(
+				"Method 'AccessTokenRepositoryInterface:hasAccessToken' should return boolean."
+			);
+		}
 		if (!$this->hasAccessToken()) {
 			$this->acquireNewAccessToken();
 		}
@@ -107,7 +116,7 @@ abstract class Api
 	/**
 	 * @return bool
 	 */
-	protected function hasAccessToken(): bool
+	protected function hasAccessToken()
 	{
 		return $this->accessTokenRepository->hasAccessToken();
 	}
@@ -148,14 +157,10 @@ abstract class Api
 	 */
 	private function createResponse(RequestInterface $request)
 	{
-		try {
-			$response = $this->callApi($this->buildRequest($request));
-		} catch (ClientException $exception) {
-			$response = $exception->getResponse();
-			if ($response->getStatusCode() === 401 && $response->getHeaderLine(self::SIZEID_ERROR_CODE_HEADER) == 109) {
-				$this->refreshAccessToken();
-				return $this->callApi($this->buildRequest($request));
-			}
+		$response = $this->callApi($this->buildRequest($request));
+		if ($response->getStatusCode() === 401 && $response->getHeaderLine(self::SIZEID_ERROR_CODE_HEADER) == 109) {
+			$this->refreshAccessToken();
+			return $this->callApi($this->buildRequest($request));
 		}
 		return $response;
 	}
@@ -175,8 +180,7 @@ abstract class Api
 	 */
 	private function buildRequest(RequestInterface $request)
 	{
-		return $request
-			->withAddedHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken())
+		return $request->withAddedHeader('Authorization', 'Bearer ' . $this->getAccessToken()->getAccessToken())
 			->withUri(new Uri($this->apiBaseUrl . '/' . $request->getUri()));
 	}
 }
