@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use SizeID\OAuth2\Entities\AccessToken;
 use SizeID\OAuth2\Exceptions\InvalidStateException;
 use SizeID\OAuth2\Repositories\AccessTokenRepositoryInterface;
+use GuzzleHttp\RequestOptions;
 
 /**
  * Shared functionality of API calls
